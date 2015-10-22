@@ -1,12 +1,11 @@
-#include<boost/program_options.hpp>
 #include<vector>
 #include<iostream>
 #include<fstream>
+#include<sstream>
 #include<string>
 #include<stdexcept>
 
 using namespace std;
-namespace po = boost::program_options;
 
 class measurement
 {
@@ -31,7 +30,7 @@ measurement::measurement(istream& ves,istream& vsw) : origin(3)
     {
         if (ves.eof()) throw runtime_error("VES parse error");
         if (!getline(ves,line)) throw runtime_error("VES parse error");
-    } while (line != "\"[Units]\"\r");
+    } while (line.compare(0,9,"\"[Units]\""));
     if (!getline(ves,line)) throw runtime_error("VES parse error");
     if (!(ves >> dt)) throw runtime_error("VES parse error");
 
@@ -39,7 +38,8 @@ measurement::measurement(istream& ves,istream& vsw) : origin(3)
     {
         if (ves.eof()) throw runtime_error("VES parse error");
         if (!getline(ves,line)) throw runtime_error("VES parse error");
-    } while (line != "\"[Origin]\"\r");
+    } while (line.compare(0,10,"\"[Origin]\""));
+    cout << line << endl;
     if (!(ves >> origin[0])) throw runtime_error("VES parse error");
     if (!(ves >> origin[1])) throw runtime_error("VES parse error");
     if (!(ves >> origin[2])) throw runtime_error("VES parse error");
@@ -119,26 +119,44 @@ void measurement::writedata(ostream& out)
     }
 }
 
+void help_message()
+{
+    cout <<
+"Usage:\n\
+    kiolvaso <basename> [<output>]\n\
+\n\
+    Writes csv data from the VES and VSW files to \"output\".\n\
+    When no output specified it writes the extracted data to stdout.\n\
+\n\
+Example:\n\
+    If there is /path/to/DATA.VSW and /path/to/DATA.VES in the same directory then it should be invoked like:\n\
+\n\
+    kiolvaso /path/to/DATA output.csv"
+    << endl;
+}
+
 int main(int argc, char* argv[])
 {
-    po::options_description desc("Usage");
-    desc.add_options()
-        ("help", "produce help message")
-	("basename", po::value<string>(),"basename of the VES and VSW files")
-	("output,o",po::value<string>()->default_value("-"),"output file name")
-    ;
-    
-    po::variables_map vm;
-    po::store(po::parse_command_line(argc, argv, desc), vm);
-    po::notify(vm);    
-    
-    if (vm.count("help")||!vm.count("basename")) {
-        cout << desc << "\n";
+    string basename;
+    string output;
+    if (argc<=1)
+    {
+        help_message();
         return 0;
     }
-    string basename = vm["basename"].as<string>();
-    string output   = vm["output"].as<string>();
-
+    else
+    {
+        basename = argv[1];
+        if (argc>2)
+        {
+            output = argv[2];
+        }
+        else
+        {
+            output = "-";
+        }
+    }
+    
     ifstream vesfile((basename+".VES").c_str());
     if (vesfile.fail())
     {
@@ -162,7 +180,7 @@ int main(int argc, char* argv[])
     }
 
     measurement meas(vesfile,vswfile);
-    cerr << meas << endl;
+    //cerr << meas << endl;
 
     meas.writedata(*out);
     
