@@ -123,7 +123,7 @@ void help_message()
 {
     cout <<
 "Usage:\n\
-    kiolvaso <basename> [<output>]\n\
+    vscopereader <basename> [<output>]\n\
 \n\
     Writes csv data from the VES and VSW files to \"output\".\n\
     When no output specified it writes the extracted data to stdout.\n\
@@ -131,7 +131,7 @@ void help_message()
 Example:\n\
     If there is /path/to/DATA.VSW and /path/to/DATA.VES in the same directory then it should be invoked like:\n\
 \n\
-    kiolvaso /path/to/DATA output.csv"
+    vscopereader /path/to/DATA output.csv"
     << endl;
 }
 
