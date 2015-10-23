@@ -39,7 +39,6 @@ measurement::measurement(istream& ves,istream& vsw) : origin(3)
         if (ves.eof()) throw runtime_error("VES parse error");
         if (!getline(ves,line)) throw runtime_error("VES parse error");
     } while (line.compare(0,10,"\"[Origin]\""));
-    cout << line << endl;
     if (!(ves >> origin[0])) throw runtime_error("VES parse error");
     if (!(ves >> origin[1])) throw runtime_error("VES parse error");
     if (!(ves >> origin[2])) throw runtime_error("VES parse error");
@@ -75,7 +74,10 @@ measurement::measurement(istream& ves,istream& vsw) : origin(3)
             try
             {
                 double value = stof(token);
-                data.back()[i]=value;
+		if (i==0)
+			data.back()[0]=value;
+		else
+                	data.back()[1+((i-1)/3)*3+(i+1)%3]=value;
             }
             catch (logic_error& err)
             {
@@ -86,9 +88,9 @@ measurement::measurement(istream& ves,istream& vsw) : origin(3)
         data.back()[0]=data.back()[0]*dt;
         for(int i=0; i<buttons.size(); i++)
         {
-            data.back()[3*i+1]=data.back()[3*i+1]/10000.-3.;
-            data.back()[3*i+2]=data.back()[3*i+2]/10000.-3.;
-            data.back()[3*i+3]=data.back()[3*i+3]/10000.;
+            data.back()[3*i+1]=data.back()[3*i+1]/10000.-3.-origin[0];
+            data.back()[3*i+2]=data.back()[3*i+2]/10000.-3.-origin[1];
+            data.back()[3*i+3]=data.back()[3*i+3]/10000.-origin[2];
         }
     }
 }
@@ -180,7 +182,6 @@ int main(int argc, char* argv[])
     }
 
     measurement meas(vesfile,vswfile);
-    //cerr << meas << endl;
 
     meas.writedata(*out);
     
