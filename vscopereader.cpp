@@ -3,6 +3,7 @@
 #include<fstream>
 #include<sstream>
 #include<string>
+#include<regex>
 #include<stdexcept>
 
 using namespace std;
@@ -53,7 +54,10 @@ measurement::measurement(istream& ves,istream& vsw) : origin(3)
         if (!getline(ss,buttons,',')) throw runtime_error("VSW parse error");
     }
     if (buttons.size()<2) throw runtime_error("VSW parse error");
-    buttons=buttons.substr(1,buttons.size()-3).c_str();
+    smatch m;
+    regex_search(buttons, m, regex("[A-Z]+"));
+    if (m[0].length() == 0) throw runtime_error("VSW parse error");
+    buttons=m[0];
     
     for(int i=0;i<4;i++)
     {
